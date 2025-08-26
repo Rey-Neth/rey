@@ -72,9 +72,9 @@ end
 -- Загружаем WindUI
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 local Window = WindUI:CreateWindow({
-    Title = "Simple Hub",
-    Icon = "triangle",
-    Author = "Custom",
+    Title = "Rey Script",
+    Icon = "circle",
+    Author = "C",
     Size = UDim2.fromOffset(400, 250),
     Theme = "Dark"
 })
