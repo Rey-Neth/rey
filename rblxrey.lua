@@ -4,7 +4,8 @@ local eu = game:GetService("Players").LocalPlayer
 --==[ Defaults ]==--
 local Settings = {
     WalkSpeed = 16,
-    JumpPower = 50
+    JumpPower = 50,
+    ESPColor = Color3.fromRGB(0, 255, 0) -- дефолтный зелёный
 }
 
 --==[ Flags ]==--
@@ -13,69 +14,49 @@ getgenv().JumpPower  = false
 getgenv().PermTpTool = false
 getgenv().ESPPlayer  = false
 
---==[ Utils ]==--
-local function round(n) return math.floor(tonumber(n) + 0.5) end
-local Number = math.random(1, 1_000_000)
-
 --==[ ESP ]==--
-local function UpdateEspPlayer()
+local function ApplyESP(plr)
+    if not getgenv().ESPPlayer then return end
+    local char = plr.Character
+    if not char then return end
+    if char:FindFirstChild("ESP_Highlight") then return end
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "ESP_Highlight"
+    hl.Adornee = char
+    hl.FillTransparency = 1 -- прозрачная заливка
+    hl.OutlineTransparency = 0
+    hl.OutlineColor = Settings.ESPColor
+    hl.Parent = char
+end
+
+local function RemoveESP(plr)
+    local char = plr.Character
+    if char and char:FindFirstChild("ESP_Highlight") then
+        char.ESP_Highlight:Destroy()
+    end
+end
+
+local function UpdateAllESP()
     for _, plr in ipairs(game:GetService("Players"):GetPlayers()) do
         if plr ~= eu then
-            pcall(function()
-                local char = plr.Character
-                local myChar = eu.Character
-                if not char or not myChar then return end
-
-                local head = char:FindFirstChild("Head")
-                local myHead = myChar:FindFirstChild("Head")
-                if not head or not myHead then return end
-
-                local tag = head:FindFirstChild("NameEsp"..Number)
-                if getgenv().ESPPlayer then
-                    if not tag then
-                        local bill = Instance.new("BillboardGui")
-                        bill.Name = "NameEsp"..Number
-                        bill.ExtentsOffset = Vector3.new(0, 1, 0)
-                        bill.Size = UDim2.new(1, 200, 1, 30)
-                        bill.Adornee = head
-                        bill.AlwaysOnTop = true
-                        bill.Parent = head
-
-                        local lbl = Instance.new("TextLabel")
-                        lbl.Name = "Lbl"
-                        lbl.Font = Enum.Font.Code
-                        lbl.TextSize = 14
-                        lbl.TextWrapped = true
-                        lbl.BackgroundTransparency = 1
-                        lbl.TextStrokeTransparency = 0.5
-                        lbl.TextColor3 = Color3.fromRGB(0,255,0)
-                        lbl.Size = UDim2.new(1,0,1,0)
-                        lbl.TextYAlignment = Enum.TextYAlignment.Top
-                        lbl.Parent = bill
-                        tag = bill
-                    end
-                    local hp = char:FindFirstChildOfClass("Humanoid")
-                    local dist = round((myHead.Position - head.Position).Magnitude/3)
-                    local hpTxt = hp and ("Health: "..round(hp.Health*100/(hp.MaxHealth > 0 and hp.MaxHealth or 100)).."%") or "Health: N/A"
-                    local lbl = tag:FindFirstChild("Lbl") or tag:FindFirstChildOfClass("TextLabel")
-                    if lbl then
-                        lbl.Text = (plr.Name.." | "..dist.." M\n"..hpTxt)
-                    end
-                else
-                    if tag then tag:Destroy() end
-                end
-            end)
+            if getgenv().ESPPlayer then
+                ApplyESP(plr)
+            else
+                RemoveESP(plr)
+            end
         end
     end
 end
 
-task.spawn(function()
-    while true do
+-- обновление на респавне игроков
+game:GetService("Players").PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(1)
         if getgenv().ESPPlayer then
-            UpdateEspPlayer()
+            ApplyESP(plr)
         end
-        task.wait(0.5)
-    end
+    end)
 end)
 
 --==[ Teleport Tool ]==--
@@ -90,8 +71,7 @@ local function GetTP()
             local hit = mouse.Hit
             if hit then
                 local pos = hit.Position + Vector3.new(0, 2.5, 0)
-                local chr = eu.Character
-                local hrp = chr and chr:FindFirstChild("HumanoidRootPart")
+                local hrp = eu.Character and eu.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then hrp.CFrame = CFrame.new(pos) end
             end
         end)
@@ -100,17 +80,15 @@ local function GetTP()
 end
 
 local function DelTP()
-    pcall(function()
-        for _, t in ipairs(eu.Backpack:GetChildren()) do
+    for _, t in ipairs(eu.Backpack:GetChildren()) do
+        if t:IsA("Tool") and t.Name == "Teleport Tool" then t:Destroy() end
+    end
+    local c = eu.Character
+    if c then
+        for _, t in ipairs(c:GetChildren()) do
             if t:IsA("Tool") and t.Name == "Teleport Tool" then t:Destroy() end
         end
-        local c = eu.Character
-        if c then
-            for _, t in ipairs(c:GetChildren()) do
-                if t:IsA("Tool") and t.Name == "Teleport Tool" then t:Destroy() end
-            end
-        end
-    end)
+    end
 end
 
 local function PermTpTool()
@@ -145,11 +123,11 @@ local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/rel
 local Window = WindUI:CreateWindow({
     Title = "Custom Hub",
     Icon = "triangle",
-    Size = UDim2.fromOffset(420, 300),
+    Size = UDim2.fromOffset(420, 320),
     Theme = "Dark",
 })
 
--- Movement tab
+-- Movement
 local Movement = Window:Tab({ Title = "Movement", Icon = "chevrons-up"})
 Movement:Section({ Title = "WalkSpeed" })
 Movement:Toggle({ Title = "Loop WalkSpeed", Value = false, Callback = function(s) getgenv().WalkSpeed = s; LoopWalkSpeed() end })
@@ -159,22 +137,33 @@ Movement:Section({ Title = "JumpPower" })
 Movement:Toggle({ Title = "Loop JumpPower", Value = false, Callback = function(s) getgenv().JumpPower = s; LoopJumpPower() end })
 Movement:Input ({ Title = "JumpPower",  Value = tostring(Settings.JumpPower), Callback = function(i) Settings.JumpPower = tonumber(i) or 50 end })
 
--- Teleport Tool tab
+-- Teleport Tool
 local Teleport = Window:Tab({ Title = "Teleport Tool", Icon = "map-pin" })
-Teleport:Button({ Title = "Get Tool",    Desc = "Gives you the teleport tool.",  Callback = GetTP })
-Teleport:Button({ Title = "Remove Tool", Desc = "Removes the teleport tool.",    Callback = DelTP })
-Teleport:Toggle({ Title = "Permanent Tool", Desc = "Keeps teleport tool always.", Value = false,
-    Callback = function(s) getgenv().PermTpTool = s; PermTpTool() end })
+Teleport:Button({ Title = "Get Tool",    Callback = GetTP })
+Teleport:Button({ Title = "Remove Tool", Callback = DelTP })
+Teleport:Toggle({ Title = "Permanent Tool", Value = false, Callback = function(s) getgenv().PermTpTool = s; PermTpTool() end })
 
--- ESP tab
+-- ESP
 local EspTab = Window:Tab({ Title = "ESP", Icon = "eye" })
 EspTab:Toggle({
     Title = "ESP Players",
-    Desc  = "Show names, distance, HP",
+    Desc  = "Show outlines on players",
     Value = false,
     Callback = function(state)
         getgenv().ESPPlayer = state
-        if not state then UpdateEspPlayer() end -- выключили → подчистим
+        UpdateAllESP()
+    end
+})
+EspTab:ColorPicker({
+    Title = "ESP Color",
+    Color = Settings.ESPColor,
+    Callback = function(c)
+        Settings.ESPColor = c
+        for _, plr in ipairs(game:GetService("Players"):GetPlayers()) do
+            if plr ~= eu and plr.Character and plr.Character:FindFirstChild("ESP_Highlight") then
+                plr.Character.ESP_Highlight.OutlineColor = c
+            end
+        end
     end
 })
 
