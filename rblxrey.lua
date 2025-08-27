@@ -1,73 +1,84 @@
--- Получаем игрока
+--==[ LocalPlayer ]==--
 local eu = game:GetService("Players").LocalPlayer
 
--- Настройки
+--==[ Defaults ]==--
 local Settings = {
     WalkSpeed = 16,
     JumpPower = 50
 }
 
--- Глобальные флаги
-getgenv().WalkSpeed = false
-getgenv().JumpPower = false
+--==[ Flags ]==--
+getgenv().WalkSpeed  = false
+getgenv().JumpPower  = false
 getgenv().PermTpTool = false
-getgenv().ESPPlayer = false
+getgenv().ESPPlayer  = false
 
--- Утилиты
+--==[ Utils ]==--
 local function round(n) return math.floor(tonumber(n) + 0.5) end
-local function isnil(x) return (x == nil) end
-local Number = math.random(1, 1000000)
+local Number = math.random(1, 1_000_000)
 
--- ===== ESP =====
+--==[ ESP ]==--
 local function UpdateEspPlayer()
-    for _, v in pairs(game:GetService("Players"):GetChildren()) do
-        pcall(function()
-            if not isnil(v.Character) then
-                if _G.ESPPlayer then
-                    if not isnil(v.Character:FindFirstChild("Head")) and not v.Character.Head:FindFirstChild("NameEsp"..Number) then
-                        local bill = Instance.new("BillboardGui", v.Character.Head)
+    for _, plr in ipairs(game:GetService("Players"):GetPlayers()) do
+        if plr ~= eu then
+            pcall(function()
+                local char = plr.Character
+                local myChar = eu.Character
+                if not char or not myChar then return end
+
+                local head = char:FindFirstChild("Head")
+                local myHead = myChar:FindFirstChild("Head")
+                if not head or not myHead then return end
+
+                local tag = head:FindFirstChild("NameEsp"..Number)
+                if getgenv().ESPPlayer then
+                    if not tag then
+                        local bill = Instance.new("BillboardGui")
                         bill.Name = "NameEsp"..Number
                         bill.ExtentsOffset = Vector3.new(0, 1, 0)
-                        bill.Size = UDim2.new(1,200,1,30)
-                        bill.Adornee = v.Character.Head
+                        bill.Size = UDim2.new(1, 200, 1, 30)
+                        bill.Adornee = head
                         bill.AlwaysOnTop = true
+                        bill.Parent = head
 
-                        local name = Instance.new("TextLabel", bill)
-                        name.Font = Enum.Font.Code
-                        name.TextWrapped = true
-                        name.Text = (v.Name.." | "..round((eu.Character.Head.Position - v.Character.Head.Position).Magnitude/3).." M\nHealth: "..round(v.Character.Humanoid.Health*100/v.Character.Humanoid.MaxHealth).."%")
-                        name.Size = UDim2.new(1,0,1,0)
-                        name.TextYAlignment = Enum.TextYAlignment.Top
-                        name.BackgroundTransparency = 1
-                        name.TextStrokeTransparency = 0.5
-                        name.TextColor3 = Color3.fromRGB(0,255,0)
-                    else
-                        -- обновление текста
-                        if v.Character.Head:FindFirstChild("NameEsp"..Number) then
-                            v.Character.Head["NameEsp"..Number].TextLabel.Text =
-                                (v.Name.." | "..round((eu.Character.Head.Position - v.Character.Head.Position).Magnitude/3).." M\nHealth: "..round(v.Character.Humanoid.Health*100/v.Character.Humanoid.MaxHealth).."%")
-                        end
+                        local lbl = Instance.new("TextLabel")
+                        lbl.Name = "Lbl"
+                        lbl.Font = Enum.Font.Code
+                        lbl.TextSize = 14
+                        lbl.TextWrapped = true
+                        lbl.BackgroundTransparency = 1
+                        lbl.TextStrokeTransparency = 0.5
+                        lbl.TextColor3 = Color3.fromRGB(0,255,0)
+                        lbl.Size = UDim2.new(1,0,1,0)
+                        lbl.TextYAlignment = Enum.TextYAlignment.Top
+                        lbl.Parent = bill
+                        tag = bill
+                    end
+                    local hp = char:FindFirstChildOfClass("Humanoid")
+                    local dist = round((myHead.Position - head.Position).Magnitude/3)
+                    local hpTxt = hp and ("Health: "..round(hp.Health*100/(hp.MaxHealth > 0 and hp.MaxHealth or 100)).."%") or "Health: N/A"
+                    local lbl = tag:FindFirstChild("Lbl") or tag:FindFirstChildOfClass("TextLabel")
+                    if lbl then
+                        lbl.Text = (plr.Name.." | "..dist.." M\n"..hpTxt)
                     end
                 else
-                    if v.Character:FindFirstChild("Head") and v.Character.Head:FindFirstChild("NameEsp"..Number) then
-                        v.Character.Head["NameEsp"..Number]:Destroy()
-                    end
+                    if tag then tag:Destroy() end
                 end
-            end
-        end)
+            end)
+        end
     end
 end
 
--- постоянно обновляем ESP
 task.spawn(function()
-    while task.wait(0.5) do
+    while true do
         if getgenv().ESPPlayer then
             UpdateEspPlayer()
         end
+        task.wait(0.5)
     end
 end)
 
--- ===== Teleport Tool =====
+--==[ Teleport Tool ]==--
 local function GetTP()
     pcall(function()
         local mouse = eu:GetMouse()
@@ -76,77 +87,94 @@ local function GetTP()
         tool.Name = "Teleport Tool"
         tool.ToolTip = "Equip and click somewhere to teleport"
         tool.Activated:Connect(function()
-            local pos = mouse.Hit.Position + Vector3.new(0, 2.5, 0)
-            eu.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+            local hit = mouse.Hit
+            if hit then
+                local pos = hit.Position + Vector3.new(0, 2.5, 0)
+                local chr = eu.Character
+                local hrp = chr and chr:FindFirstChild("HumanoidRootPart")
+                if hrp then hrp.CFrame = CFrame.new(pos) end
+            end
         end)
         tool.Parent = eu.Backpack
     end)
 end
+
 local function DelTP()
-    for _, t in pairs(eu.Backpack:GetChildren()) do
-        if t:IsA("Tool") and t.Name == "Teleport Tool" then t:Destroy() end
-    end
-    for _, t in pairs(eu.Character:GetChildren()) do
-        if t:IsA("Tool") and t.Name == "Teleport Tool" then t:Destroy() end
-    end
+    pcall(function()
+        for _, t in ipairs(eu.Backpack:GetChildren()) do
+            if t:IsA("Tool") and t.Name == "Teleport Tool" then t:Destroy() end
+        end
+        local c = eu.Character
+        if c then
+            for _, t in ipairs(c:GetChildren()) do
+                if t:IsA("Tool") and t.Name == "Teleport Tool" then t:Destroy() end
+            end
+        end
+    end)
 end
+
 local function PermTpTool()
     while getgenv().PermTpTool and task.wait(1) do
-        if not eu.Backpack:FindFirstChild("Teleport Tool") and not eu.Character:FindFirstChild("Teleport Tool") then
+        if not eu.Backpack:FindFirstChild("Teleport Tool") and not (eu.Character and eu.Character:FindFirstChild("Teleport Tool")) then
             GetTP()
         end
     end
 end
 
--- ===== WalkSpeed & JumpPower =====
-local function WalkSpeed()
+--==[ WalkSpeed / JumpPower ]==--
+local function LoopWalkSpeed()
     while getgenv().WalkSpeed and task.wait(0.1) do
-        if eu.Character and eu.Character:FindFirstChild("Humanoid") then
-            eu.Character.Humanoid.WalkSpeed = Settings.WalkSpeed
-        end
-    end
-end
-local function JumpPower()
-    while getgenv().JumpPower and task.wait(0.1) do
-        if eu.Character and eu.Character:FindFirstChild("Humanoid") then
-            eu.Character.Humanoid.JumpPower = Settings.JumpPower
+        local hum = eu.Character and eu.Character:FindFirstChildOfClass("Humanoid")
+        if hum and hum.WalkSpeed ~= Settings.WalkSpeed then
+            hum.WalkSpeed = Settings.WalkSpeed
         end
     end
 end
 
--- ===== UI =====
+local function LoopJumpPower()
+    while getgenv().JumpPower and task.wait(0.1) do
+        local hum = eu.Character and eu.Character:FindFirstChildOfClass("Humanoid")
+        if hum and hum.JumpPower ~= Settings.JumpPower then
+            hum.JumpPower = Settings.JumpPower
+        end
+    end
+end
+
+--==[ UI ]==--
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 local Window = WindUI:CreateWindow({
     Title = "Custom Hub",
     Icon = "triangle",
-    Size = UDim2.fromOffset(400, 280),
-    Theme = "Dark"
+    Size = UDim2.fromOffset(420, 300),
+    Theme = "Dark",
 })
 
--- Movement
+-- Movement tab
 local Movement = Window:Tab({ Title = "Movement", Icon = "chevrons-up"})
 Movement:Section({ Title = "WalkSpeed" })
-Movement:Toggle({ Title = "Loop WalkSpeed", Value = false, Callback = function(s) getgenv().WalkSpeed = s; WalkSpeed() end })
-Movement:Input({ Title = "WalkSpeed", Value = tostring(Settings.WalkSpeed), Callback = function(i) Settings.WalkSpeed = tonumber(i) or 16 end })
+Movement:Toggle({ Title = "Loop WalkSpeed", Value = false, Callback = function(s) getgenv().WalkSpeed = s; LoopWalkSpeed() end })
+Movement:Input ({ Title = "WalkSpeed",  Value = tostring(Settings.WalkSpeed), Callback = function(i) Settings.WalkSpeed = tonumber(i) or 16 end })
+
 Movement:Section({ Title = "JumpPower" })
-Movement:Toggle({ Title = "Loop JumpPower", Value = false, Callback = function(s) getgenv().JumpPower = s; JumpPower() end })
-Movement:Input({ Title = "JumpPower", Value = tostring(Settings.JumpPower), Callback = function(i) Settings.JumpPower = tonumber(i) or 50 end })
+Movement:Toggle({ Title = "Loop JumpPower", Value = false, Callback = function(s) getgenv().JumpPower = s; LoopJumpPower() end })
+Movement:Input ({ Title = "JumpPower",  Value = tostring(Settings.JumpPower), Callback = function(i) Settings.JumpPower = tonumber(i) or 50 end })
 
--- Teleport Tool
+-- Teleport Tool tab
 local Teleport = Window:Tab({ Title = "Teleport Tool", Icon = "map-pin" })
-Teleport:Button({ Title = "Get Tool", Callback = GetTP })
-Teleport:Button({ Title = "Remove Tool", Callback = DelTP })
-Teleport:Toggle({ Title = "Permanent Tool", Value = false, Callback = function(s) getgenv().PermTpTool = s; PermTpTool() end })
+Teleport:Button({ Title = "Get Tool",    Desc = "Gives you the teleport tool.",  Callback = GetTP })
+Teleport:Button({ Title = "Remove Tool", Desc = "Removes the teleport tool.",    Callback = DelTP })
+Teleport:Toggle({ Title = "Permanent Tool", Desc = "Keeps teleport tool always.", Value = false,
+    Callback = function(s) getgenv().PermTpTool = s; PermTpTool() end })
 
--- ESP
+-- ESP tab
 local EspTab = Window:Tab({ Title = "ESP", Icon = "eye" })
 EspTab:Toggle({
     Title = "ESP Players",
-    Desc = "Show names, distance, HP",
+    Desc  = "Show names, distance, HP",
     Value = false,
     Callback = function(state)
         getgenv().ESPPlayer = state
-        if not state then UpdateEspPlayer() end
+        if not state then UpdateEspPlayer() end -- выключили → подчистим
     end
 })
 
