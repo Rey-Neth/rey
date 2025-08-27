@@ -232,7 +232,7 @@ task.spawn(function()
     local Content = WindUIRoot:FindFirstChildWhichIsA("Frame", true)
     if Content then
         UserInputService.InputBegan:Connect(function(input, gpe)
-            if not gpe and input.KeyCode == Enum.KeyCode.RightShift then
+            if not gpe and input.KeyCode == Enum.KeyCode.\ then
                 Content.Visible = not Content.Visible
             end
         end)
