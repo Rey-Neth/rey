@@ -1,57 +1,19 @@
 local eu = game:GetService("Players").LocalPlayer
+local Lighting = game:GetService("Lighting")
+
 local Settings = {
     WalkSpeed = 16,
     JumpPower = 50,
     ESPColor = Color3.fromRGB(0,255,0) -- зелёный по умолчанию
 }
 
-getgenv().WalkSpeed   = false
-getgenv().JumpPower   = false
-getgenv().PermTpTool  = false
-getgenv().ESPPlayer   = false
-getgenv().FullBright  = false
+getgenv().WalkSpeed  = false
+getgenv().JumpPower  = false
+getgenv().PermTpTool = false
+getgenv().ESPPlayer  = false
 
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
-
---========== Lighting / FullBright ==========--
-local Lighting = game:GetService("Lighting")
-local DefaultLighting = {
-    Brightness     = Lighting.Brightness,
-    Ambient        = Lighting.Ambient,
-    ClockTime      = Lighting.ClockTime,
-    GlobalShadows  = Lighting.GlobalShadows,
-    FogEnd         = Lighting.FogEnd,
-}
-
-Settings.FullBrightBrightness = 5
-Settings.FullBrightAmbient    = Color3.new(1,1,1)
-
-local function ApplyFullBrightOnce()
-    pcall(function()
-        Lighting.Brightness    = Settings.FullBrightBrightness
-        Lighting.Ambient       = Settings.FullBrightAmbient
-        Lighting.ClockTime     = 14
-        Lighting.GlobalShadows = false
-        Lighting.FogEnd        = 1e9
-    end)
-end
-
-local function RestoreLightingDefaults()
-    pcall(function()
-        Lighting.Brightness    = DefaultLighting.Brightness
-        Lighting.Ambient       = DefaultLighting.Ambient
-        Lighting.ClockTime     = DefaultLighting.ClockTime
-        Lighting.GlobalShadows = DefaultLighting.GlobalShadows
-        Lighting.FogEnd        = DefaultLighting.FogEnd
-    end)
-end
-
-local function LoopFullBright()
-    while getgenv().FullBright and task.wait(0.25) do
-        ApplyFullBrightOnce()
-    end
-end
 
 --========== ESP ==========--
 local function UpdateESP()
@@ -69,7 +31,6 @@ local function UpdateESP()
                 local hl   = char:FindFirstChild("ESP_Highlight")
 
                 if getgenv().ESPPlayer then
-                    -- BillboardGui (текст)
                     if not bill then
                         local gui = Instance.new("BillboardGui", head)
                         gui.Name = "NameEsp"..Number
@@ -96,7 +57,6 @@ local function UpdateESP()
                         txt.Text = plr.Name.." | "..dist.." M\nHealth: "..hp.."%"
                     end
 
-                    -- Highlight (обводка)
                     if not hl then
                         hl = Instance.new("Highlight", char)
                         hl.Name = "ESP_Highlight"
@@ -169,7 +129,7 @@ local function LoopJumpPower()
     end
 end
 
---========== Color Picker (кастом) ==========--
+--========== Color Picker ==========--
 local function HSVtoRGB(h, s, v)
     local i = math.floor(h * 6)
     local f = h * 6 - i
@@ -201,16 +161,16 @@ local function OpenColorPicker(callback)
     local Palette = Instance.new("ImageLabel", Frame)
     Palette.Size = UDim2.new(0, 180, 0, 180)
     Palette.Position = UDim2.new(0, 10, 0, 10)
-    Palette.Image = "rbxassetid://4155801252" -- HSV палитра
+    Palette.Image = "rbxassetid://4155801252"
     Palette.BackgroundTransparency = 1
 
-    local BrightnessBtn = Instance.new("TextButton", Frame)
-    BrightnessBtn.Size = UDim2.new(0, 40, 0, 180)
-    BrightnessBtn.Position = UDim2.new(0, 200, 0, 10)
-    BrightnessBtn.Text = ""
-    BrightnessBtn.AutoButtonColor = false
+    local Brightness = Instance.new("TextButton", Frame)
+    Brightness.Size = UDim2.new(0, 40, 0, 180)
+    Brightness.Position = UDim2.new(0, 200, 0, 10)
+    Brightness.Text = ""
+    Brightness.AutoButtonColor = false
 
-    local BrFrame = Instance.new("Frame", BrightnessBtn)
+    local BrFrame = Instance.new("Frame", Brightness)
     BrFrame.Size = UDim2.new(1,0,1,0)
     BrFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
 
@@ -235,11 +195,11 @@ local function OpenColorPicker(callback)
         end
     end)
 
-    BrightnessBtn.MouseButton1Down:Connect(function()
+    Brightness.MouseButton1Down:Connect(function()
         local conn
         conn = game:GetService("UserInputService").InputChanged:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseMovement then
-                local relY = (input.Position.Y - BrightnessBtn.AbsolutePosition.Y) / BrightnessBtn.AbsoluteSize.Y
+                local relY = (input.Position.Y - Brightness.AbsolutePosition.Y) / Brightness.AbsoluteSize.Y
                 relY = math.clamp(relY, 0, 1)
                 val = 1 - relY
                 local col = HSVtoRGB(hue, sat, val)
@@ -249,7 +209,7 @@ local function OpenColorPicker(callback)
         end)
         game:GetService("UserInputService").InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                if conn then conn:Disconnect() end
+                conn:Disconnect()
             end
         end)
     end)
@@ -264,25 +224,25 @@ local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/rel
 local Window = WindUI:CreateWindow({
     Title = "Custom Hub",
     Icon = "triangle",
-    Size = UDim2.fromOffset(420, 360),
+    Size = UDim2.fromOffset(420, 340),
     Theme = "Dark",
 })
 
 -- Movement
 local Movement = Window:Tab({ Title = "Movement", Icon = "chevrons-up"})
 Movement:Section({ Title = "WalkSpeed" })
-Movement:Toggle({ Title = "Loop WalkSpeed", Value = false, Callback = function(s) getgenv().WalkSpeed = s; if s then task.spawn(LoopWalkSpeed) end end })
+Movement:Toggle({ Title = "Loop WalkSpeed", Value = false, Callback = function(s) getgenv().WalkSpeed = s; LoopWalkSpeed() end })
 Movement:Input ({ Title = "WalkSpeed",  Value = tostring(Settings.WalkSpeed), Callback = function(i) Settings.WalkSpeed = tonumber(i) or 16 end })
 
 Movement:Section({ Title = "JumpPower" })
-Movement:Toggle({ Title = "Loop JumpPower", Value = false, Callback = function(s) getgenv().JumpPower = s; if s then task.spawn(LoopJumpPower) end end })
+Movement:Toggle({ Title = "Loop JumpPower", Value = false, Callback = function(s) getgenv().JumpPower = s; LoopJumpPower() end })
 Movement:Input ({ Title = "JumpPower",  Value = tostring(Settings.JumpPower), Callback = function(i) Settings.JumpPower = tonumber(i) or 50 end })
 
 -- Teleport Tool
 local Teleport = Window:Tab({ Title = "Teleport Tool", Icon = "map-pin" })
 Teleport:Button({ Title = "Get Tool",    Callback = GetTP })
 Teleport:Button({ Title = "Remove Tool", Callback = DelTP })
-Teleport:Toggle({ Title = "Permanent Tool", Value = false, Callback = function(s) getgenv().PermTpTool = s; if s then task.spawn(PermTpTool) end end })
+Teleport:Toggle({ Title = "Permanent Tool", Value = false, Callback = function(s) getgenv().PermTpTool = s; PermTpTool() end })
 
 -- ESP
 local EspTab = Window:Tab({ Title = "ESP", Icon = "eye" })
@@ -310,50 +270,34 @@ EspTab:Button({
     end
 })
 
--- Brightness (без слайдера, т.к. WindUI не поддерживает Slider)
+-- Brightness
 local BrightnessTab = Window:Tab({ Title = "Brightness", Icon = "sun" })
-
-BrightnessTab:Toggle({
-    Title = "FullBright (loop)",
-    Desc  = "Постоянно держать карту яркой",
-    Value = false,
-    Callback = function(s)
-        getgenv().FullBright = s
-        if s then
-            task.spawn(LoopFullBright)
-        end
-    end
-})
-
-BrightnessTab:Input({
-    Title = "Target Brightness",
-    Desc  = "Число, напр. 5",
-    Value = tostring(Settings.FullBrightBrightness),
-    Callback = function(i)
-        local v = tonumber(i)
-        if v then
-            Settings.FullBrightBrightness = math.clamp(v, 0, 100)
-            if not getgenv().FullBright then
-                Lighting.Brightness = Settings.FullBrightBrightness
-            end
-        end
-    end
-})
-
 BrightnessTab:Button({
-    Title = "Night Vision (once)",
-    Desc  = "Сделать максимально светло один раз",
+    Title = "Set Max Brightness",
+    Desc  = "Сделать карту яркой",
     Callback = function()
-        ApplyFullBrightOnce()
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 12
+        Lighting.FogEnd = 100000
+        Lighting.GlobalShadows = false
+        Lighting.OutdoorAmbient = Color3.new(1,1,1)
     end
 })
 
-BrightnessTab:Button({
-    Title = "Reset Lighting",
-    Desc  = "Вернуть стандартные значения",
+-- Scripts
+local ScriptsTab = Window:Tab({ Title = "Scripts", Icon = "terminal" })
+ScriptsTab:Button({
+    Title = "Admin Panel (Infinite Yield)",
+    Desc  = "Открыть админ панель",
     Callback = function()
-        getgenv().FullBright = false
-        RestoreLightingDefaults()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end
+})
+ScriptsTab:Button({
+    Title = "Browser (Dex Explorer)",
+    Desc  = "Открыть браузер объектов",
+    Callback = function()
+        loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
     end
 })
 
