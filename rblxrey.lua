@@ -297,9 +297,17 @@ ScriptsTab:Button({
     Title = "Browser (Dex Explorer)",
     Desc  = "Открыть браузер объектов",
     Callback = function()
+        loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
+    end
+})
+ScriptsTab:Button({
+    Title = "Browser (Dex Explorer) Lite",
+    Desc  = "Открыть браузер объектов",
+    Callback = function()
         loadstring(game:HttpGet("https://gist.githubusercontent.com/dannythehacker/1781582ab545302f2b34afc4ec53e811/raw/ee5324771f017073fc30e640323ac2a9b3bfc550/dark%2520dex%2520v4"))()
     end
 })
+
 
 
 Window:SelectTab(1)
