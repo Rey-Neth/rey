@@ -315,16 +315,19 @@ ScriptsTab:Button({
         end
 
         -- загружаем обычный Dex Explorer
-        local Dex = loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
+        loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
 
-        -- ждём пока загрузится UI
-        task.wait(2)
-
-        -- применяем Dark Theme
-        if game.CoreGui:FindFirstChild("Dex") then
-            ApplyDarkTheme(game.CoreGui.Dex)
-        end
+        -- ждем появления Dex и применяем Dark Theme
+        task.spawn(function()
+            local DexGui
+            repeat
+                DexGui = game.CoreGui:FindFirstChild("Dex")
+                task.wait(0.1)
+            until DexGui
+            ApplyDarkTheme(DexGui)
+        end)
     end
 })
+
 
 Window:SelectTab(1)
