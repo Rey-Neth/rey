@@ -226,15 +226,35 @@ ScriptsTab:Button({
 Window:SelectTab(1)
 
 --========== Toggle WindUI Menu (RightShift) ==========--
+
 task.spawn(function()
+    local UIS = game:GetService("UserInputService")
+    local CoreGui = game:GetService("CoreGui")
+    local WindUIRoot
+
+    -- ждём пока WindUI загрузится
     repeat task.wait() until CoreGui:FindFirstChild("WindUI")
-    local WindUIRoot = CoreGui:FindFirstChild("WindUI")
-    local Content = WindUIRoot:FindFirstChildWhichIsA("Frame", true)
+    WindUIRoot = CoreGui:FindFirstChild("WindUI")
+
+    -- ищем фрейм Content
+    local Content = WindUIRoot:FindFirstChild("Content", true)
+    if not Content then
+        -- если вдруг по имени не найден, ищем любой Frame у окна
+        for _, v in ipairs(WindUIRoot:GetDescendants()) do
+            if v:IsA("Frame") and v.Name == "Content" then
+                Content = v
+                break
+            end
+        end
+    end
+
     if Content then
-        UserInputService.InputBegan:Connect(function(input, gpe)
-            if not gpe and input.KeyCode == Enum.KeyCode.\ then
+        UIS.InputBegan:Connect(function(input, gpe)
+            if not gpe and input.KeyCode == Enum.KeyCode.RightShift then
                 Content.Visible = not Content.Visible
             end
         end)
+    else
+        warn("[WindUI] Не найден Content Frame для переключения!")
     end
 end)
