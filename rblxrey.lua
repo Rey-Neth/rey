@@ -6,13 +6,15 @@ local CoreGui = game:GetService("CoreGui")
 local Settings = {
     WalkSpeed = 16,
     JumpPower = 50,
-    ESPColor = Color3.fromRGB(0,255,0)
+    ESPColor = Color3.fromRGB(0,255,0),
+    FullBrightBrightness = 5
 }
 
 getgenv().WalkSpeed  = false
 getgenv().JumpPower  = false
 getgenv().PermTpTool = false
 getgenv().ESPPlayer  = false
+getgenv().FullBright = false
 
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
@@ -131,6 +133,28 @@ local function LoopJumpPower()
     end
 end
 
+--========== FullBright ==========--
+local function LoopFullBright()
+    while getgenv().FullBright do
+        task.wait(0.1)
+        Lighting.Brightness = Settings.FullBrightBrightness
+        Lighting.ClockTime = 14
+        Lighting.GlobalShadows = false
+    end
+end
+
+local function ApplyFullBrightOnce()
+    Lighting.Brightness = Settings.FullBrightBrightness
+    Lighting.ClockTime = 14
+    Lighting.GlobalShadows = false
+end
+
+local function RestoreLightingDefaults()
+    Lighting.Brightness = 3
+    Lighting.ClockTime = 14
+    Lighting.GlobalShadows = true
+end
+
 --========== Color Picker ==========--
 local function HSVtoRGB(h, s, v)
     local i = math.floor(h * 6)
@@ -230,6 +254,29 @@ local Window = WindUI:CreateWindow({
     Theme = "Dark",
 })
 
+-- Кнопка для открытия/скрытия окна
+local OpenButton = Window:EditOpenButton({
+    Title = "Открыть меню",
+    Icon = "settings",
+    Enabled = true,
+    Position = UDim2.new(0, 10, 0, 10),
+    Draggable = true,
+    OnlyMobile = false,
+})
+
+-- Горячая клавиша для открытия/скрытия
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.RightShift then
+        if Window.Closed then
+            Window:Open()
+            OpenButton:Visible(false)
+        else
+            Window:Close()
+            OpenButton:Visible(true)
+        end
+    end
+end)
+
 -- Movement
 local Movement = Window:Tab({ Title = "Movement", Icon = "chevrons-up"})
 Movement:Section({ Title = "WalkSpeed" })
@@ -319,7 +366,6 @@ BrightnessTab:Button({
     end
 })
 
-
 -- Scripts
 local ScriptsTab = Window:Tab({ Title = "Scripts", Icon = "terminal" })
 ScriptsTab:Button({
@@ -345,37 +391,3 @@ ScriptsTab:Button({
 })
 
 Window:SelectTab(1)
-
---========== Toggle WindUI Menu (RightShift) ==========--
-
-task.spawn(function()
-    local UIS = game:GetService("UserInputService")
-    local CoreGui = game:GetService("CoreGui")
-    local WindUIRoot
-
-    -- ждём пока WindUI загрузится
-    repeat task.wait() until CoreGui:FindFirstChild("WindUI")
-    WindUIRoot = CoreGui:FindFirstChild("WindUI")
-
-    -- ищем фрейм Content
-    local Content = WindUIRoot:FindFirstChild("Content", true)
-    if not Content then
-        -- если вдруг по имени не найден, ищем любой Frame у окна
-        for _, v in ipairs(WindUIRoot:GetDescendants()) do
-            if v:IsA("Frame") and v.Name == "Content" then
-                Content = v
-                break
-            end
-        end
-    end
-
-    if Content then
-        UIS.InputBegan:Connect(function(input, gpe)
-            if not gpe and input.KeyCode == Enum.KeyCode.RightShift then
-                Content.Visible = not Content.Visible
-            end
-        end)
-    else
-        warn("[WindUI] Не найден Content Frame для переключения!")
-    end
-end)
