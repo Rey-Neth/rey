@@ -83,7 +83,7 @@ task.spawn(function()
     end
 end)
 
---========== Movement / TP Tool ==========--
+--========== Teleport Tool ==========--
 local function GetTP()
     local mouse = eu:GetMouse()
     local tool = Instance.new("Tool")
@@ -114,6 +114,7 @@ local function PermTpTool()
     end
 end
 
+--========== WalkSpeed / JumpPower ==========--
 local function LoopWalkSpeed()
     while getgenv().WalkSpeed and task.wait(0.1) do
         local hum = eu.Character and eu.Character:FindFirstChildOfClass("Humanoid")
@@ -154,9 +155,6 @@ Teleport:Button({ Title = "Remove Tool", Callback = DelTP })
 Teleport:Toggle({ Title = "Permanent Tool", Value = false, Callback = function(s) getgenv().PermTpTool = s; PermTpTool() end })
 
 -- ESP
--- ... (остальной код Movement/Teleport тот же)
-
--- ESP
 local EspTab = Window:Tab({ Title = "ESP", Icon = "eye" })
 EspTab:Toggle({
     Title = "ESP Players",
@@ -167,7 +165,6 @@ EspTab:Toggle({
         UpdateESP()
     end
 })
-
 EspTab:ColorPicker({
     Title = "ESP Color",
     Color = Settings.ESPColor,
@@ -180,6 +177,5 @@ EspTab:ColorPicker({
         end
     end
 })
-
 
 Window:SelectTab(1)
