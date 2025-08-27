@@ -272,4 +272,36 @@ EspTab:Button({
     end
 })
 
+-- Brightness
+local Lighting = game:GetService("Lighting")
+local BrightnessTab = Window:Tab({ Title = "Brightness", Icon = "sun" })
+
+BrightnessTab:Slider({
+    Title = "Brightness",
+    Min = 0,
+    Max = 10,
+    Value = Lighting.Brightness,
+    Callback = function(val)
+        Lighting.Brightness = val
+    end
+})
+
+BrightnessTab:Button({
+    Title = "Night Vision",
+    Desc  = "Make everything bright",
+    Callback = function()
+        Lighting.Brightness = 5
+        Lighting.Ambient = Color3.new(1,1,1)
+    end
+})
+
+BrightnessTab:Button({
+    Title = "Reset Lighting",
+    Desc  = "Restore default",
+    Callback = function()
+        Lighting.Brightness = 2 -- стандартное значение Roblox
+        Lighting.Ambient = Color3.fromRGB(128,128,128)
+    end
+})
+
 Window:SelectTab(1)
