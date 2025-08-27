@@ -329,7 +329,9 @@ BrightnessTab:Toggle({
     Callback = function(s)
         getgenv().FullBright = s
         if s then
-            task.spawn(LoopFullBright)
+            StartFullBright()
+        else
+            StopFullBright()
         end
     end
 })
