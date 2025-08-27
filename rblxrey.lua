@@ -134,13 +134,34 @@ local function LoopJumpPower()
 end
 
 --========== FullBright ==========--
-local function LoopFullBright()
-    while getgenv().FullBright do
-        task.wait(0.1)
-        Lighting.Brightness = Settings.FullBrightBrightness
-        Lighting.ClockTime = 14
-        Lighting.GlobalShadows = false
+local FullBrightLoop = nil
+
+local function StartFullBright()
+    if FullBrightLoop then
+        FullBrightLoop:Disconnect()
+        FullBrightLoop = nil
     end
+    
+    FullBrightLoop = game:GetService("RunService").RenderStepped:Connect(function()
+        if getgenv().FullBright then
+            Lighting.Brightness = Settings.FullBrightBrightness
+            Lighting.ClockTime = 14
+            Lighting.GlobalShadows = false
+        else
+            if FullBrightLoop then
+                FullBrightLoop:Disconnect()
+                FullBrightLoop = nil
+            end
+        end
+    end)
+end
+
+local function StopFullBright()
+    if FullBrightLoop then
+        FullBrightLoop:Disconnect()
+        FullBrightLoop = nil
+    end
+    RestoreLightingDefaults()
 end
 
 local function ApplyFullBrightOnce()
@@ -344,7 +365,7 @@ BrightnessTab:Input({
         local v = tonumber(i)
         if v then
             Settings.FullBrightBrightness = math.clamp(v, 0, 100)
-            if not getgenv().FullBright then
+            if getgenv().FullBright then
                 Lighting.Brightness = Settings.FullBrightBrightness
             end
         end
@@ -364,7 +385,7 @@ BrightnessTab:Button({
     Desc  = "Вернуть стандартные значения",
     Callback = function()
         getgenv().FullBright = false
-        RestoreLightingDefaults()
+        StopFullBright()
     end
 })
 
