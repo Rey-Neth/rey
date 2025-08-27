@@ -1,6 +1,7 @@
 local eu = game:GetService("Players").LocalPlayer
 local Lighting = game:GetService("Lighting")
 local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 
 local Settings = {
     WalkSpeed = 16,
@@ -131,7 +132,7 @@ local function LoopJumpPower()
 end
 
 --========== Color Picker ==========--
--- (оставил без изменений, твой рабочий код)
+-- твой рабочий код (не изменял)
 
 --========== UI ==========--
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
@@ -141,15 +142,6 @@ local Window = WindUI:CreateWindow({
     Size = UDim2.fromOffset(420, 340),
     Theme = "Dark",
 })
-
--- добавляем переменную для хранения состояния
-local uiVisible = true
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.RightShift then
-        uiVisible = not uiVisible
-        Window:SetVisible(uiVisible) -- скрывает/открывает UI
-    end
-end)
 
 -- Movement
 local Movement = Window:Tab({ Title = "Movement", Icon = "chevrons-up"})
@@ -232,3 +224,17 @@ ScriptsTab:Button({
 })
 
 Window:SelectTab(1)
+
+--========== Toggle WindUI Menu (RightShift) ==========--
+task.spawn(function()
+    repeat task.wait() until CoreGui:FindFirstChild("WindUI")
+    local WindUIRoot = CoreGui:FindFirstChild("WindUI")
+    local Content = WindUIRoot:FindFirstChildWhichIsA("Frame", true)
+    if Content then
+        UserInputService.InputBegan:Connect(function(input, gpe)
+            if not gpe and input.KeyCode == Enum.KeyCode.RightShift then
+                Content.Visible = not Content.Visible
+            end
+        end)
+    end
+end)
