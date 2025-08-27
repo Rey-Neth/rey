@@ -295,37 +295,9 @@ ScriptsTab:Button({
 })
 ScriptsTab:Button({
     Title = "Browser (Dex Explorer)",
-    Desc  = "Открыть браузер объектов (Dark Theme)",
+    Desc  = "Открыть браузер объектов",
     Callback = function()
-        -- Dex Explorer (Dark Theme)
-        local function ApplyDarkTheme(gui)
-            for _, obj in ipairs(gui:GetDescendants()) do
-                if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
-                    obj.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                elseif obj:IsA("TextButton") or obj:IsA("TextBox") then
-                    obj.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                    obj.TextColor3 = Color3.fromRGB(255, 255, 255)
-                elseif obj:IsA("TextLabel") then
-                    obj.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-                    obj.TextColor3 = Color3.fromRGB(255, 255, 255)
-                elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-                    obj.BackgroundTransparency = 1
-                end
-            end
-        end
-
-        -- загружаем обычный Dex Explorer
         loadstring(game:HttpGet("https://obj.wearedevs.net/2/scripts/Dex%20Explorer.lua"))()
-
-        -- ждем появления Dex и применяем Dark Theme
-        task.spawn(function()
-            local DexGui
-            repeat
-                DexGui = game.CoreGui:FindFirstChild("Dex")
-                task.wait(0.1)
-            until DexGui
-            ApplyDarkTheme(DexGui)
-        end)
     end
 })
 
