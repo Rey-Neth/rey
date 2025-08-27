@@ -14,7 +14,6 @@ getgenv().WalkSpeed  = false
 getgenv().JumpPower  = false
 getgenv().PermTpTool = false
 getgenv().ESPPlayer  = false
-getgenv().FullBright = false
 
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
@@ -133,37 +132,7 @@ local function LoopJumpPower()
     end
 end
 
---========== FullBright ==========--
-local FullBrightLoop = nil
-
-local function StartFullBright()
-    if FullBrightLoop then
-        FullBrightLoop:Disconnect()
-        FullBrightLoop = nil
-    end
-    
-    FullBrightLoop = game:GetService("RunService").RenderStepped:Connect(function()
-        if getgenv().FullBright then
-            Lighting.Brightness = Settings.FullBrightBrightness
-            Lighting.ClockTime = 14
-            Lighting.GlobalShadows = false
-        else
-            if FullBrightLoop then
-                FullBrightLoop:Disconnect()
-                FullBrightLoop = nil
-            end
-        end
-    end)
-end
-
-local function StopFullBright()
-    if FullBrightLoop then
-        FullBrightLoop:Disconnect()
-        FullBrightLoop = nil
-    end
-    RestoreLightingDefaults()
-end
-
+--========== FullBright Functions ==========--
 local function ApplyFullBrightOnce()
     Lighting.Brightness = Settings.FullBrightBrightness
     Lighting.ClockTime = 14
@@ -340,37 +309,8 @@ EspTab:Button({
     end
 })
 
--- Brightness
+-- Brightness (только кнопки Night Vision и Reset)
 local BrightnessTab = Window:Tab({ Title = "Brightness", Icon = "sun" })
-
-BrightnessTab:Toggle({
-    Title = "FullBright (loop)",
-    Desc  = "Постоянно держать карту яркой",
-    Value = false,
-    Callback = function(s)
-        getgenv().FullBright = s
-        if s then
-            StartFullBright()
-        else
-            StopFullBright()
-        end
-    end
-})
-
-BrightnessTab:Input({
-    Title = "Target Brightness",
-    Desc  = "Число, напр. 5",
-    Value = tostring(Settings.FullBrightBrightness),
-    Callback = function(i)
-        local v = tonumber(i)
-        if v then
-            Settings.FullBrightBrightness = math.clamp(v, 0, 100)
-            if getgenv().FullBright then
-                Lighting.Brightness = Settings.FullBrightBrightness
-            end
-        end
-    end
-})
 
 BrightnessTab:Button({
     Title = "Night Vision (once)",
@@ -384,8 +324,7 @@ BrightnessTab:Button({
     Title = "Reset Lighting",
     Desc  = "Вернуть стандартные значения",
     Callback = function()
-        getgenv().FullBright = false
-        StopFullBright()
+        RestoreLightingDefaults()
     end
 })
 
