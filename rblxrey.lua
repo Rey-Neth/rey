@@ -20,85 +20,54 @@ local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
 --========== Dot Cursor ==========--
-local DotCursor = nil
-local DotConnection = nil
+local DotGui = nil
 
-local function CreateDotCursor()
-    if DotCursor then
-        DotCursor:Destroy()
-        DotCursor = nil
+local function CreateSimpleDot()
+    if DotGui then
+        DotGui:Destroy()
     end
     
-    DotCursor = Instance.new("ScreenGui")
-    DotCursor.Name = "DotCursor"
-    DotCursor.Parent = CoreGui
-    DotCursor.ResetOnSpawn = false
-    DotCursor.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    DotCursor.IgnoreGuiInset = true
+    DotGui = Instance.new("ScreenGui")
+    DotGui.Name = "SimpleDot"
+    DotGui.Parent = CoreGui
+    DotGui.ResetOnSpawn = false
     
-    -- Создаем белую точку
     local Dot = Instance.new("Frame")
     Dot.Name = "Dot"
-    Dot.Size = UDim2.new(0, 6, 0, 6)
+    Dot.Size = UDim2.new(0, 8, 0, 8)
     Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Dot.BorderSizePixel = 0
-    Dot.BackgroundTransparency = 0
-    Dot.Parent = DotCursor
+    Dot.Parent = DotGui
     Dot.AnchorPoint = Vector2.new(0.5, 0.5)
-    Dot.ZIndex = 9999
     
-    -- Делаем идеальный круг
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(1, 0)
-    UICorner.Parent = Dot
+    -- Делаем круг
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = Dot
     
-    -- Добавляем черную обводку для контраста
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(0, 0, 0)
-    UIStroke.Thickness = 1.2
-    UIStroke.Parent = Dot
-    
-    return DotCursor
+    return DotGui
 end
 
-local function UpdateDotPosition()
-    if not DotCursor or not DotCursor:FindFirstChild("Dot") then return end
+local function StartSimpleDot()
+    StopSimpleDot()
     
-    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-    local dot = DotCursor.Dot
+    CreateSimpleDot()
     
-    -- Плавно обновляем позицию
-    dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
-end
-
-local function StartDotCursor()
-    StopDotCursor()
-    
-    CreateDotCursor()
-    
-    -- Создаем соединение для обновления позиции
-    DotConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if getgenv().DotCursor and DotCursor and DotCursor:FindFirstChild("Dot") then
-            UpdateDotPosition()
-        else
-            StopDotCursor()
+    -- Обновляем позицию точки
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if DotGui and DotGui:FindFirstChild("Dot") and getgenv().DotCursor then
+            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+            DotGui.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
         end
     end)
 end
 
-local function StopDotCursor()
-    if DotConnection then
-        DotConnection:Disconnect()
-        DotConnection = nil
-    end
-    
-    if DotCursor then
-        DotCursor:Destroy()
-        DotCursor = nil
+local function StopSimpleDot()
+    if DotGui then
+        DotGui:Destroy()
+        DotGui = nil
     end
 end
-
-
 
 --========== ESP ==========--
 local function UpdateESP()
