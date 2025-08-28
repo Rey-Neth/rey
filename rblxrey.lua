@@ -20,6 +20,7 @@ local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
 --========== Dot Cursor ==========--
+--========== Dot Cursor ==========--
 local DotCursorGui = nil
 local DotCursorConnection = nil
 
@@ -35,53 +36,42 @@ local function CreateDotCursor()
     DotCursorGui.ResetOnSpawn = false
     DotCursorGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    local Dot = Instance.new("Frame")
+    -- Используем готовую текстуру белой точки
+    local Dot = Instance.new("ImageLabel")
     Dot.Name = "Dot"
-    Dot.Size = UDim2.new(0, 6, 0, 6)
-    Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Dot.BorderSizePixel = 0
-    Dot.BackgroundTransparency = 0
+    Dot.Size = UDim2.new(0, 12, 0, 12)
+    Dot.Image = "rbxassetid://6999762003" -- Маленькая белая точка
+    Dot.BackgroundTransparency = 1
     Dot.Parent = DotCursorGui
     Dot.AnchorPoint = Vector2.new(0.5, 0.5)
-    
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(1, 0)
-    UICorner.Parent = Dot
+    Dot.ZIndex = 9999
     
     return DotCursorGui
 end
 
 local function UpdateDotCursor()
-    if not DotCursorGui then
+    if not DotCursorGui or not DotCursorGui:FindFirstChild("Dot") then
         CreateDotCursor()
     end
     
     local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-    DotCursorGui.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+    if mouse and DotCursorGui and DotCursorGui:FindFirstChild("Dot") then
+        DotCursorGui.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+    end
 end
 
 local function StartDotCursor()
-    if DotCursorConnection then
-        DotCursorConnection:Disconnect()
-    end
+    StopDotCursor()
     
     CreateDotCursor()
-    DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if getgenv().DotCursor then
-            UpdateDotCursor()
-            game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
-        else
-            if DotCursorConnection then
-                DotCursorConnection:Disconnect()
-                DotCursorConnection = nil
-            end
-            if DotCursorGui then
-                DotCursorGui:Destroy()
-                DotCursorGui = nil
-            end
-            game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
-        end
+    
+    -- Прячем стандартный курсор
+    pcall(function()
+        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+        mouse.Icon = "rbxasset://textures/blank.png"
     end)
+    
+    DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(UpdateDotCursor)
 end
 
 local function StopDotCursor()
@@ -93,7 +83,11 @@ local function StopDotCursor()
         DotCursorGui:Destroy()
         DotCursorGui = nil
     end
-    game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
+    -- Возвращаем стандартный курсор
+    pcall(function()
+        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+        mouse.Icon = ""
+    end)
 end
 
 --========== ESP ==========--
