@@ -14,9 +14,87 @@ getgenv().WalkSpeed  = false
 getgenv().JumpPower  = false
 getgenv().PermTpTool = false
 getgenv().ESPPlayer  = false
+getgenv().DotCursor = false
 
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
+
+--========== Dot Cursor ==========--
+local DotCursorGui = nil
+local DotCursorConnection = nil
+
+local function CreateDotCursor()
+    if DotCursorGui then
+        DotCursorGui:Destroy()
+        DotCursorGui = nil
+    end
+    
+    DotCursorGui = Instance.new("ScreenGui")
+    DotCursorGui.Name = "DotCursor"
+    DotCursorGui.Parent = CoreGui
+    DotCursorGui.ResetOnSpawn = false
+    DotCursorGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    local Dot = Instance.new("Frame")
+    Dot.Name = "Dot"
+    Dot.Size = UDim2.new(0, 6, 0, 6)
+    Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Dot.BorderSizePixel = 0
+    Dot.BackgroundTransparency = 0
+    Dot.Parent = DotCursorGui
+    Dot.AnchorPoint = Vector2.new(0.5, 0.5)
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(1, 0)
+    UICorner.Parent = Dot
+    
+    return DotCursorGui
+end
+
+local function UpdateDotCursor()
+    if not DotCursorGui then
+        CreateDotCursor()
+    end
+    
+    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    DotCursorGui.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+end
+
+local function StartDotCursor()
+    if DotCursorConnection then
+        DotCursorConnection:Disconnect()
+    end
+    
+    CreateDotCursor()
+    DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if getgenv().DotCursor then
+            UpdateDotCursor()
+            game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
+        else
+            if DotCursorConnection then
+                DotCursorConnection:Disconnect()
+                DotCursorConnection = nil
+            end
+            if DotCursorGui then
+                DotCursorGui:Destroy()
+                DotCursorGui = nil
+            end
+            game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
+        end
+    end)
+end
+
+local function StopDotCursor()
+    if DotCursorConnection then
+        DotCursorConnection:Disconnect()
+        DotCursorConnection = nil
+    end
+    if DotCursorGui then
+        DotCursorGui:Destroy()
+        DotCursorGui = nil
+    end
+    game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
+end
 
 --========== ESP ==========--
 local function UpdateESP()
@@ -309,7 +387,7 @@ EspTab:Button({
     end
 })
 
--- Brightness (только кнопки Night Vision и Reset)
+-- Brightness
 local BrightnessTab = Window:Tab({ Title = "Brightness", Icon = "sun" })
 
 BrightnessTab:Button({
@@ -325,6 +403,22 @@ BrightnessTab:Button({
     Desc  = "Вернуть стандартные значения",
     Callback = function()
         RestoreLightingDefaults()
+    end
+})
+
+-- Dot Cursor
+local VisualTab = Window:Tab({ Title = "Visual", Icon = "mouse-pointer" })
+VisualTab:Toggle({
+    Title = "Dot Cursor",
+    Desc  = "Заменить курсор на белую точку",
+    Value = false,
+    Callback = function(state)
+        getgenv().DotCursor = state
+        if state then
+            StartDotCursor()
+        else
+            StopDotCursor()
+        end
     end
 })
 
