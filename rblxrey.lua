@@ -14,60 +14,9 @@ getgenv().WalkSpeed  = false
 getgenv().JumpPower  = false
 getgenv().PermTpTool = false
 getgenv().ESPPlayer  = false
-getgenv().DotCursor  = false
 
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
-
---========== Курсор-точка ==========--
-local function ApplyDotCursor()
-    if getgenv().DotCursor then
-        -- Создаем GUI для большой точки
-        local dotGui = Instance.new("ScreenGui")
-        dotGui.Name = "DotCursorGui"
-        dotGui.Parent = CoreGui
-        dotGui.ResetOnSpawn = false
-        dotGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        
-        local dot = Instance.new("ImageLabel")
-        dot.Name = "Dot"
-        dot.Parent = dotGui
-        dot.Size = UDim2.new(0, 12, 0, 12) -- В 3 раза больше (оригинал ~4x4)
-        dot.AnchorPoint = Vector2.new(0.5, 0.5)
-        dot.Image = "rbxassetid://187012669"
-        dot.BackgroundTransparency = 1
-        dot.BorderSizePixel = 0
-        dot.ZIndex = 9999
-        
-        -- Полностью убираем оригинальный курсор
-        UserInputService.MouseIcon = ""
-        
-        -- Обновляем позицию точки
-        local connection
-        connection = game:GetService("RunService").RenderStepped:Connect(function()
-            local mouse = eu:GetMouse()
-            dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
-        end)
-        
-        -- Сохраняем соединение для последующего отключения
-        getgenv().DotCursorConnection = connection
-        getgenv().DotCursorGui = dotGui
-        
-    else
-        -- Удаляем GUI точки и отключаем соединение
-        if getgenv().DotCursorGui then
-            getgenv().DotCursorGui:Destroy()
-            getgenv().DotCursorGui = nil
-        end
-        if getgenv().DotCursorConnection then
-            getgenv().DotCursorConnection:Disconnect()
-            getgenv().DotCursorConnection = nil
-        end
-        
-        -- Восстанавливаем стандартный курсор
-        UserInputService.MouseIcon = ""
-    end
-end
 
 --========== ESP ==========--
 local function UpdateESP()
@@ -360,7 +309,7 @@ EspTab:Button({
     end
 })
 
--- Brightness
+-- Brightness (только кнопки Night Vision и Reset)
 local BrightnessTab = Window:Tab({ Title = "Brightness", Icon = "sun" })
 
 BrightnessTab:Button({
@@ -400,18 +349,6 @@ ScriptsTab:Button({
     Desc  = "Открыть браузер объектов",
     Callback = function()
         loadstring(game:HttpGet("https://gist.githubusercontent.com/dannythehacker/1781582ab545302f2b34afc4ec53e811/raw/ee5324771f017073fc30e640323ac2a9b3bfc550/dark%2520dex%2520v4"))()
-    end
-})
-
--- Новый таб для настроек интерфейса
-local InterfaceTab = Window:Tab({ Title = "Interface", Icon = "sliders" })
-InterfaceTab:Toggle({
-    Title = "Dot Cursor",
-    Desc  = "Заменить курсор на большую точку (12x12 пикселей)",
-    Value = false,
-    Callback = function(state)
-        getgenv().DotCursor = state
-        ApplyDotCursor()
     end
 })
 
