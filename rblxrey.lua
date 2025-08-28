@@ -19,58 +19,73 @@ getgenv().DotCursor = false
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
---========== Simple Dot Cursor ==========--
-local DotGui = nil
-local CoreGui = game:GetService("CoreGui") -- Добавьте эту строку
+--========== Dot Cursor ==========--
+local DotCursor = nil
+local DotConnection = nil
 
-local function CreateSimpleDot()
-    if DotGui then
-        DotGui:Destroy()
+local function CreateDotCursor()
+    if DotCursor then
+        DotCursor:Destroy()
+        DotCursor = nil
     end
     
-    DotGui = Instance.new("ScreenGui")
-    DotGui.Name = "SimpleDot"
-    DotGui.Parent = CoreGui
-    DotGui.ResetOnSpawn = false
-    DotGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling -- Рекомендуется добавить
+    DotCursor = Instance.new("ScreenGui")
+    DotCursor.Name = "DotCursor"
+    DotCursor.Parent = CoreGui
+    DotCursor.ResetOnSpawn = false
+    DotCursor.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    DotCursor.IgnoreGuiInset = true
     
-    local Dot = Instance.new("Frame")
+    -- Используем указанный asset ID для точки
+    local Dot = Instance.new("ImageLabel")
     Dot.Name = "Dot"
-    Dot.Size = UDim2.new(0, 8, 0, 8)
-    Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Dot.BorderSizePixel = 0
-    Dot.Parent = DotGui
+    Dot.Size = UDim2.new(0, 16, 0, 16)
+    Dot.Image = "rbxassetid://187012669"
+    Dot.BackgroundTransparency = 1
+    Dot.Parent = DotCursor
     Dot.AnchorPoint = Vector2.new(0.5, 0.5)
-    Dot.ZIndex = 999 -- Высокий ZIndex чтобы точка была поверх всего
+    Dot.ZIndex = 9999
     
-    -- Делаем круг
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0)
-    corner.Parent = Dot
-    
-    return DotGui
+    return DotCursor
 end
 
-local function StartSimpleDot()
-    StopSimpleDot()
+local function UpdateDotPosition()
+    if not DotCursor or not DotCursor:FindFirstChild("Dot") then return end
     
-    CreateSimpleDot()
+    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    local dot = DotCursor.Dot
     
     -- Обновляем позицию точки
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if DotGui and DotGui:FindFirstChild("Dot") and getgenv().DotCursor then
-            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-            DotGui.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+    dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+end
+
+local function StartDotCursor()
+    StopDotCursor()
+    
+    CreateDotCursor()
+    
+    -- Создаем соединение для обновления позиции
+    DotConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if getgenv().DotCursor and DotCursor and DotCursor:FindFirstChild("Dot") then
+            UpdateDotPosition()
+        else
+            StopDotCursor()
         end
     end)
 end
 
-local function StopSimpleDot()
-    if DotGui then
-        DotGui:Destroy()
-        DotGui = nil
+local function StopDotCursor()
+    if DotConnection then
+        DotConnection:Disconnect()
+        DotConnection = nil
+    end
+    
+    if DotCursor then
+        DotCursor:Destroy()
+        DotCursor = nil
     end
 end
+
 
 --========== ESP ==========--
 local function UpdateESP()
@@ -386,17 +401,18 @@ BrightnessTab:Button({
 local VisualTab = Window:Tab({ Title = "Visual", Icon = "mouse-pointer" })
 VisualTab:Toggle({
     Title = "Dot Cursor",
-    Desc  = "Простая белая точка вместо курсора",
+    Desc  = "Заменить курсор на точку",
     Value = false,
     Callback = function(state)
         getgenv().DotCursor = state
         if state then
-            StartSimpleDot()
+            StartDotCursor()
         else
-            StopSimpleDot()
+            StopDotCursor()
         end
     end
 })
+
 
 -- Scripts
 local ScriptsTab = Window:Tab({ Title = "Scripts", Icon = "terminal" })
