@@ -22,7 +22,7 @@ local Number = math.random(1, 999999)
 --========== Курсор-точка ==========--
 local function ApplyDotCursor()
     if getgenv().DotCursor then
-        -- Создаем GUI для маленькой точки
+        -- Создаем GUI для большой точки
         local dotGui = Instance.new("ScreenGui")
         dotGui.Name = "DotCursorGui"
         dotGui.Parent = CoreGui
@@ -32,17 +32,14 @@ local function ApplyDotCursor()
         local dot = Instance.new("ImageLabel")
         dot.Name = "Dot"
         dot.Parent = dotGui
-        dot.Size = UDim2.new(0, 4, 0, 4) -- В 10 раз меньше оригинального (оригинал ~40x40)
+        dot.Size = UDim2.new(0, 12, 0, 12) -- В 3 раза больше (оригинал ~4x4)
         dot.AnchorPoint = Vector2.new(0.5, 0.5)
         dot.Image = "rbxassetid://187012669"
         dot.BackgroundTransparency = 1
         dot.BorderSizePixel = 0
         dot.ZIndex = 9999
         
-        -- Сохраняем оригинальный курсор и скрываем его
-        if not getgenv().OriginalCursor then
-            getgenv().OriginalCursor = UserInputService.MouseIcon
-        end
+        -- Полностью убираем оригинальный курсор
         UserInputService.MouseIcon = ""
         
         -- Обновляем позицию точки
@@ -67,13 +64,8 @@ local function ApplyDotCursor()
             getgenv().DotCursorConnection = nil
         end
         
-        -- Восстанавливаем оригинальный курсор
-        if getgenv().OriginalCursor then
-            UserInputService.MouseIcon = getgenv().OriginalCursor
-            getgenv().OriginalCursor = nil
-        else
-            UserInputService.MouseIcon = "" -- Сброс к стандартному курсору
-        end
+        -- Восстанавливаем стандартный курсор
+        UserInputService.MouseIcon = ""
     end
 end
 
@@ -415,7 +407,7 @@ ScriptsTab:Button({
 local InterfaceTab = Window:Tab({ Title = "Interface", Icon = "sliders" })
 InterfaceTab:Toggle({
     Title = "Dot Cursor",
-    Desc  = "Заменить курсор на маленькую точку (4x4 пикселя)",
+    Desc  = "Заменить курсор на большую точку (12x12 пикселей)",
     Value = false,
     Callback = function(state)
         getgenv().DotCursor = state
