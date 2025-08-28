@@ -383,14 +383,14 @@ BrightnessTab:Button({
 local VisualTab = Window:Tab({ Title = "Visual", Icon = "mouse-pointer" })
 VisualTab:Toggle({
     Title = "Dot Cursor",
-    Desc  = "Заменить курсор на белую точку",
+    Desc  = "Простая белая точка вместо курсора",
     Value = false,
     Callback = function(state)
         getgenv().DotCursor = state
         if state then
-            StartDotCursor()
+            StartSimpleDot()
         else
-            StopDotCursor()
+            StopSimpleDot()
         end
     end
 })
