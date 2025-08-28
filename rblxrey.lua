@@ -22,14 +22,51 @@ local Number = math.random(1, 999999)
 --========== Курсор-точка ==========--
 local function ApplyDotCursor()
     if getgenv().DotCursor then
-        -- Сохраняем оригинальный курсор
+        -- Создаем GUI для маленькой точки
+        local dotGui = Instance.new("ScreenGui")
+        dotGui.Name = "DotCursorGui"
+        dotGui.Parent = CoreGui
+        dotGui.ResetOnSpawn = false
+        dotGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        
+        local dot = Instance.new("ImageLabel")
+        dot.Name = "Dot"
+        dot.Parent = dotGui
+        dot.Size = UDim2.new(0, 4, 0, 4) -- В 10 раз меньше оригинального (оригинал ~40x40)
+        dot.AnchorPoint = Vector2.new(0.5, 0.5)
+        dot.Image = "rbxassetid://187012669"
+        dot.BackgroundTransparency = 1
+        dot.BorderSizePixel = 0
+        dot.ZIndex = 9999
+        
+        -- Сохраняем оригинальный курсор и скрываем его
         if not getgenv().OriginalCursor then
             getgenv().OriginalCursor = UserInputService.MouseIcon
         end
+        UserInputService.MouseIcon = ""
         
-        -- Устанавливаем курсор-точку
-        UserInputService.MouseIcon = "rbxassetid://187012669"
+        -- Обновляем позицию точки
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            local mouse = eu:GetMouse()
+            dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+        end)
+        
+        -- Сохраняем соединение для последующего отключения
+        getgenv().DotCursorConnection = connection
+        getgenv().DotCursorGui = dotGui
+        
     else
+        -- Удаляем GUI точки и отключаем соединение
+        if getgenv().DotCursorGui then
+            getgenv().DotCursorGui:Destroy()
+            getgenv().DotCursorGui = nil
+        end
+        if getgenv().DotCursorConnection then
+            getgenv().DotCursorConnection:Disconnect()
+            getgenv().DotCursorConnection = nil
+        end
+        
         -- Восстанавливаем оригинальный курсор
         if getgenv().OriginalCursor then
             UserInputService.MouseIcon = getgenv().OriginalCursor
@@ -378,7 +415,7 @@ ScriptsTab:Button({
 local InterfaceTab = Window:Tab({ Title = "Interface", Icon = "sliders" })
 InterfaceTab:Toggle({
     Title = "Dot Cursor",
-    Desc  = "Заменить курсор на точку (ID: 187012669)",
+    Desc  = "Заменить курсор на маленькую точку (4x4 пикселя)",
     Value = false,
     Callback = function(state)
         getgenv().DotCursor = state
