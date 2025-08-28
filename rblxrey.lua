@@ -19,7 +19,9 @@ getgenv().DotCursor = false
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
---========== Dot Cursor ==========--
+--========== Simple Dot Cursor ==========--
+local DotGui = nil
+local CoreGui = game:GetService("CoreGui") -- Добавьте эту строку
 
 local function CreateSimpleDot()
     if DotGui then
@@ -30,6 +32,7 @@ local function CreateSimpleDot()
     DotGui.Name = "SimpleDot"
     DotGui.Parent = CoreGui
     DotGui.ResetOnSpawn = false
+    DotGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling -- Рекомендуется добавить
     
     local Dot = Instance.new("Frame")
     Dot.Name = "Dot"
@@ -38,6 +41,7 @@ local function CreateSimpleDot()
     Dot.BorderSizePixel = 0
     Dot.Parent = DotGui
     Dot.AnchorPoint = Vector2.new(0.5, 0.5)
+    Dot.ZIndex = 999 -- Высокий ZIndex чтобы точка была поверх всего
     
     -- Делаем круг
     local corner = Instance.new("UICorner")
