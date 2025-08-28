@@ -20,23 +20,26 @@ local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
 --========== Dot Cursor ==========--
---========== Dot Cursor ==========--
 local DotCursor = nil
+local DotConnection = nil
 
 local function CreateDotCursor()
     if DotCursor then
         DotCursor:Destroy()
+        DotCursor = nil
     end
     
     DotCursor = Instance.new("ScreenGui")
-    DotCursor.Name = "SimpleDotCursor"
+    DotCursor.Name = "DotCursor"
     DotCursor.Parent = CoreGui
     DotCursor.ResetOnSpawn = false
     DotCursor.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    DotCursor.IgnoreGuiInset = true
     
+    -- Создаем белую точку
     local Dot = Instance.new("Frame")
     Dot.Name = "Dot"
-    Dot.Size = UDim2.new(0, 4, 0, 4)
+    Dot.Size = UDim2.new(0, 6, 0, 6)
     Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Dot.BorderSizePixel = 0
     Dot.BackgroundTransparency = 0
@@ -44,12 +47,28 @@ local function CreateDotCursor()
     Dot.AnchorPoint = Vector2.new(0.5, 0.5)
     Dot.ZIndex = 9999
     
-    -- Делаем круг
+    -- Делаем идеальный круг
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(1, 0)
     UICorner.Parent = Dot
     
+    -- Добавляем черную обводку для контраста
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(0, 0, 0)
+    UIStroke.Thickness = 1.2
+    UIStroke.Parent = Dot
+    
     return DotCursor
+end
+
+local function UpdateDotPosition()
+    if not DotCursor or not DotCursor:FindFirstChild("Dot") then return end
+    
+    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    local dot = DotCursor.Dot
+    
+    -- Плавно обновляем позицию
+    dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
 end
 
 local function StartDotCursor()
@@ -57,31 +76,29 @@ local function StartDotCursor()
     
     CreateDotCursor()
     
-    -- Прячем стандартный курсор
-    pcall(function()
-        game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
-    end)
-    
-    -- Обновляем позицию точки
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if DotCursor and DotCursor:FindFirstChild("Dot") and getgenv().DotCursor then
-            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-            DotCursor.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+    -- Создаем соединение для обновления позиции
+    DotConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if getgenv().DotCursor and DotCursor and DotCursor:FindFirstChild("Dot") then
+            UpdateDotPosition()
+        else
+            StopDotCursor()
         end
     end)
 end
 
 local function StopDotCursor()
+    if DotConnection then
+        DotConnection:Disconnect()
+        DotConnection = nil
+    end
+    
     if DotCursor then
         DotCursor:Destroy()
         DotCursor = nil
     end
-    
-    -- Возвращаем курсор
-    pcall(function()
-        game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
-    end)
 end
+
+
 
 --========== ESP ==========--
 local function UpdateESP()
