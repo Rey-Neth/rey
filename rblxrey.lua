@@ -19,6 +19,7 @@ getgenv().DotCursor = false
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
+--========== Dot Cursor ==========--
 local DotCursorGui = nil
 local DotCursorConnection = nil
 
