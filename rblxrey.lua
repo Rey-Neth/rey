@@ -22,39 +22,20 @@ local Number = math.random(1, 999999)
 --========== Курсор-точка ==========--
 local function ApplyDotCursor()
     if getgenv().DotCursor then
-        -- Создаем GUI для точки
-        local dotGui = Instance.new("ScreenGui")
-        dotGui.Name = "DotCursorGui"
-        dotGui.Parent = CoreGui
-        dotGui.ResetOnSpawn = false
-        dotGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        
-        local dot = Instance.new("Frame")
-        dot.Name = "Dot"
-        dot.Parent = dotGui
-        dot.Size = UDim2.new(0, 6, 0, 6)
-        dot.AnchorPoint = Vector2.new(0.5, 0.5)
-        dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        dot.BorderSizePixel = 0
-        dot.ZIndex = 9999
-        
-        -- Обновляем позицию точки
-        local connection
-        connection = game:GetService("RunService").RenderStepped:Connect(function()
-            local mouse = eu:GetMouse()
-            dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
-        end)
-        
-        -- Сохраняем соединение для последующего отключения
-        getgenv().DotCursorConnection = connection
-    else
-        -- Удаляем GUI точки и отключаем соединение
-        if CoreGui:FindFirstChild("DotCursorGui") then
-            CoreGui.DotCursorGui:Destroy()
+        -- Сохраняем оригинальный курсор
+        if not getgenv().OriginalCursor then
+            getgenv().OriginalCursor = UserInputService.MouseIcon
         end
-        if getgenv().DotCursorConnection then
-            getgenv().DotCursorConnection:Disconnect()
-            getgenv().DotCursorConnection = nil
+        
+        -- Устанавливаем курсор-точку
+        UserInputService.MouseIcon = "rbxassetid://187012669"
+    else
+        -- Восстанавливаем оригинальный курсор
+        if getgenv().OriginalCursor then
+            UserInputService.MouseIcon = getgenv().OriginalCursor
+            getgenv().OriginalCursor = nil
+        else
+            UserInputService.MouseIcon = "" -- Сброс к стандартному курсору
         end
     end
 end
@@ -397,7 +378,7 @@ ScriptsTab:Button({
 local InterfaceTab = Window:Tab({ Title = "Interface", Icon = "sliders" })
 InterfaceTab:Toggle({
     Title = "Dot Cursor",
-    Desc  = "Заменить курсор на белую точку",
+    Desc  = "Заменить курсор на точку (ID: 187012669)",
     Value = false,
     Callback = function(state)
         getgenv().DotCursor = state
