@@ -34,16 +34,26 @@ local function CreateDotCursor()
     DotCursorGui.Parent = CoreGui
     DotCursorGui.ResetOnSpawn = false
     DotCursorGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    DotCursorGui.IgnoreGuiInset = true
     
-    -- Простая белая точка через ImageLabel
-    local Dot = Instance.new("ImageLabel")
+    local Dot = Instance.new("Frame")
     Dot.Name = "Dot"
-    Dot.Size = UDim2.new(0, 8, 0, 8)
-    Dot.Image = "rbxassetid://13370637723" -- Белый круглый пиксель
-    Dot.BackgroundTransparency = 1
+    Dot.Size = UDim2.new(0, 6, 0, 6)
+    Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Dot.BorderSizePixel = 0
+    Dot.BackgroundTransparency = 0
     Dot.Parent = DotCursorGui
     Dot.AnchorPoint = Vector2.new(0.5, 0.5)
-    Dot.ZIndex = 9999
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(1, 0)
+    UICorner.Parent = Dot
+    
+    -- Добавляем черную обводку для лучшей видимости
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color3.fromRGB(0, 0, 0)
+    UIStroke.Thickness = 1
+    UIStroke.Parent = Dot
     
     return DotCursorGui
 end
@@ -60,20 +70,37 @@ local function UpdateDotCursor()
 end
 
 local function StartDotCursor()
-    StopDotCursor() -- Очищаем предыдущие
+    if DotCursorConnection then
+        DotCursorConnection:Disconnect()
+    end
     
     CreateDotCursor()
     
-    -- Прячем стандартный курсор
-    pcall(function()
+    -- Скрываем стандартный курсор
+    local success, result = pcall(function()
         game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
     end)
     
     DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if getgenv().DotCursor then
+        if getgenv().DotCursor and DotCursorGui and DotCursorGui:FindFirstChild("Dot") then
             UpdateDotCursor()
+            -- Дополнительно скрываем курсор каждый кадр
+            pcall(function()
+                game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
+            end)
         else
-            StopDotCursor()
+            if DotCursorConnection then
+                DotCursorConnection:Disconnect()
+                DotCursorConnection = nil
+            end
+            if DotCursorGui then
+                DotCursorGui:Destroy()
+                DotCursorGui = nil
+            end
+            -- Восстанавливаем стандартный курсор
+            pcall(function()
+                game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
+            end)
         end
     end)
 end
@@ -87,7 +114,7 @@ local function StopDotCursor()
         DotCursorGui:Destroy()
         DotCursorGui = nil
     end
-    -- Возвращаем стандартный курсор
+    -- Восстанавливаем стандартный курсор
     pcall(function()
         game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
     end)
