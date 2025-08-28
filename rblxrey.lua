@@ -20,19 +20,66 @@ local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
 --========== Dot Cursor ==========--
+--========== Dot Cursor ==========--
+local DotCursor = nil
+
+local function CreateDotCursor()
+    if DotCursor then
+        DotCursor:Destroy()
+    end
+    
+    DotCursor = Instance.new("ScreenGui")
+    DotCursor.Name = "SimpleDotCursor"
+    DotCursor.Parent = CoreGui
+    DotCursor.ResetOnSpawn = false
+    DotCursor.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    local Dot = Instance.new("Frame")
+    Dot.Name = "Dot"
+    Dot.Size = UDim2.new(0, 4, 0, 4)
+    Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Dot.BorderSizePixel = 0
+    Dot.BackgroundTransparency = 0
+    Dot.Parent = DotCursor
+    Dot.AnchorPoint = Vector2.new(0.5, 0.5)
+    Dot.ZIndex = 9999
+    
+    -- Делаем круг
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(1, 0)
+    UICorner.Parent = Dot
+    
+    return DotCursor
+end
+
 local function StartDotCursor()
-    -- Просто прячем курсор Roblox
+    StopDotCursor()
+    
+    CreateDotCursor()
+    
+    -- Прячем стандартный курсор
     pcall(function()
-        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-        mouse.Icon = "rbxasset://textures/blank.png"
+        game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
+    end)
+    
+    -- Обновляем позицию точки
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if DotCursor and DotCursor:FindFirstChild("Dot") and getgenv().DotCursor then
+            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+            DotCursor.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+        end
     end)
 end
 
 local function StopDotCursor()
-    -- Возвращаем стандартный курсор Roblox
+    if DotCursor then
+        DotCursor:Destroy()
+        DotCursor = nil
+    end
+    
+    -- Возвращаем курсор
     pcall(function()
-        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-        mouse.Icon = ""
+        game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
     end)
 end
 
