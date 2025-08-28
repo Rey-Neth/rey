@@ -19,50 +19,80 @@ getgenv().DotCursor = false
 local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
---========== Dot Cursor ==========--
---========== Dot Cursor ==========--
-local dotScreenGui = nil
+local DotCursorGui = nil
+local DotCursorConnection = nil
 
-local function SetupDotCursor()
-    if dotScreenGui then
-        dotScreenGui:Destroy()
+local function CreateDotCursor()
+    if DotCursorGui then
+        DotCursorGui:Destroy()
+        DotCursorGui = nil
     end
     
-    dotScreenGui = Instance.new("ScreenGui")
-    dotScreenGui.Name = "DotCursorUI"
-    dotScreenGui.Parent = CoreGui
-    dotScreenGui.ResetOnSpawn = false
+    DotCursorGui = Instance.new("ScreenGui")
+    DotCursorGui.Name = "DotCursor"
+    DotCursorGui.Parent = CoreGui
+    DotCursorGui.ResetOnSpawn = false
+    DotCursorGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    local dot = Instance.new("ImageLabel")
-    dot.Name = "CursorDot"
-    dot.Size = UDim2.new(0, 12, 0, 12)
-    dot.Image = "rbxassetid://187012669"
-    dot.BackgroundTransparency = 1
-    dot.Parent = dotScreenGui
-    dot.AnchorPoint = Vector2.new(0.5, 0.5)
-    dot.ZIndex = 10000
+    local Dot = Instance.new("Frame")
+    Dot.Name = "Dot"
+    Dot.Size = UDim2.new(0, 6, 0, 6)
+    Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Dot.BorderSizePixel = 0
+    Dot.BackgroundTransparency = 0
+    Dot.Parent = DotCursorGui
+    Dot.AnchorPoint = Vector2.new(0.5, 0.5)
     
-    return dotScreenGui
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(1, 0)
+    UICorner.Parent = Dot
+    
+    return DotCursorGui
 end
 
-local function EnableDotCursor()
-    if not getgenv().DotCursor then return end
+local function UpdateDotCursor()
+    if not DotCursorGui then
+        CreateDotCursor()
+    end
     
-    local dotGui = SetupDotCursor()
     local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    DotCursorGui.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+end
+
+local function StartDotCursor()
+    if DotCursorConnection then
+        DotCursorConnection:Disconnect()
+    end
     
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if dotGui and dotGui:FindFirstChild("CursorDot") and getgenv().DotCursor then
-            dotGui.CursorDot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
+    CreateDotCursor()
+    DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if getgenv().DotCursor then
+            UpdateDotCursor()
+            game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
+        else
+            if DotCursorConnection then
+                DotCursorConnection:Disconnect()
+                DotCursorConnection = nil
+            end
+            if DotCursorGui then
+                DotCursorGui:Destroy()
+                DotCursorGui = nil
+            end
+            game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
         end
     end)
 end
 
-local function DisableDotCursor()
-    if dotScreenGui then
-        dotScreenGui:Destroy()
-        dotScreenGui = nil
+local function StopDotCursor()
+    if DotCursorConnection then
+        DotCursorConnection:Disconnect()
+        DotCursorConnection = nil
     end
+    if DotCursorGui then
+        DotCursorGui:Destroy()
+        DotCursorGui = nil
+    end
+    game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
 end
 
 --========== ESP ==========--
@@ -379,14 +409,14 @@ BrightnessTab:Button({
 local VisualTab = Window:Tab({ Title = "Visual", Icon = "mouse-pointer" })
 VisualTab:Toggle({
     Title = "Dot Cursor",
-    Desc  = "Использовать точку вместо курсора",
+    Desc  = "Заменить курсор на белую точку",
     Value = false,
     Callback = function(state)
         getgenv().DotCursor = state
         if state then
-            EnableDotCursor()
+            StartDotCursor()
         else
-            DisableDotCursor()
+            StopDotCursor()
         end
     end
 })
