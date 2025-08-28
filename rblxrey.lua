@@ -39,8 +39,8 @@ local function ApplyDotCursor()
         dot.BorderSizePixel = 0
         dot.ZIndex = 9999
         
-        -- Полностью убираем оригинальный курсор с помощью прозрачного изображения
-        UserInputService.MouseIcon = "rbxassetid://0" -- Прозрачное изображение
+        -- Полностью убираем оригинальный курсор
+        UserInputService.MouseIcon = ""
         
         -- Обновляем позицию точки
         local connection
@@ -71,7 +71,7 @@ end
 
 --========== ESP ==========--
 local function UpdateESP()
-    for _, plr in ipairs(game:GetService("Players":GetPlayers()) do
+    for _, plr in ipairs(game:GetService("Players"):GetPlayers()) do
         if plr ~= eu then
             pcall(function()
                 local char = plr.Character
