@@ -20,7 +20,6 @@ local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
 --========== Dot Cursor ==========--
---========== Dot Cursor ==========--
 local DotCursorGui = nil
 local DotCursorConnection = nil
 
@@ -36,11 +35,11 @@ local function CreateDotCursor()
     DotCursorGui.ResetOnSpawn = false
     DotCursorGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    -- Используем готовую текстуру белой точки
+    -- Простая белая точка через ImageLabel
     local Dot = Instance.new("ImageLabel")
     Dot.Name = "Dot"
-    Dot.Size = UDim2.new(0, 12, 0, 12)
-    Dot.Image = "rbxassetid://6999762003" -- Маленькая белая точка
+    Dot.Size = UDim2.new(0, 8, 0, 8)
+    Dot.Image = "rbxassetid://13370637723" -- Белый круглый пиксель
     Dot.BackgroundTransparency = 1
     Dot.Parent = DotCursorGui
     Dot.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -61,17 +60,22 @@ local function UpdateDotCursor()
 end
 
 local function StartDotCursor()
-    StopDotCursor()
+    StopDotCursor() -- Очищаем предыдущие
     
     CreateDotCursor()
     
     -- Прячем стандартный курсор
     pcall(function()
-        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-        mouse.Icon = "rbxasset://textures/blank.png"
+        game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
     end)
     
-    DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(UpdateDotCursor)
+    DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if getgenv().DotCursor then
+            UpdateDotCursor()
+        else
+            StopDotCursor()
+        end
+    end)
 end
 
 local function StopDotCursor()
@@ -85,8 +89,7 @@ local function StopDotCursor()
     end
     -- Возвращаем стандартный курсор
     pcall(function()
-        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-        mouse.Icon = ""
+        game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
     end)
 end
 
