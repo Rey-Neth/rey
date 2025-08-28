@@ -20,103 +20,19 @@ local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
 --========== Dot Cursor ==========--
-local DotCursorGui = nil
-local DotCursorConnection = nil
-
-local function CreateDotCursor()
-    if DotCursorGui then
-        DotCursorGui:Destroy()
-        DotCursorGui = nil
-    end
-    
-    DotCursorGui = Instance.new("ScreenGui")
-    DotCursorGui.Name = "DotCursor"
-    DotCursorGui.Parent = CoreGui
-    DotCursorGui.ResetOnSpawn = false
-    DotCursorGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    DotCursorGui.IgnoreGuiInset = true
-    
-    local Dot = Instance.new("Frame")
-    Dot.Name = "Dot"
-    Dot.Size = UDim2.new(0, 6, 0, 6)
-    Dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Dot.BorderSizePixel = 0
-    Dot.BackgroundTransparency = 0
-    Dot.Parent = DotCursorGui
-    Dot.AnchorPoint = Vector2.new(0.5, 0.5)
-    
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(1, 0)
-    UICorner.Parent = Dot
-    
-    -- Добавляем черную обводку для лучшей видимости
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Color3.fromRGB(0, 0, 0)
-    UIStroke.Thickness = 1
-    UIStroke.Parent = Dot
-    
-    return DotCursorGui
-end
-
-local function UpdateDotCursor()
-    if not DotCursorGui or not DotCursorGui:FindFirstChild("Dot") then
-        CreateDotCursor()
-    end
-    
-    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-    if mouse and DotCursorGui and DotCursorGui:FindFirstChild("Dot") then
-        DotCursorGui.Dot.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
-    end
-end
-
 local function StartDotCursor()
-    if DotCursorConnection then
-        DotCursorConnection:Disconnect()
-    end
-    
-    CreateDotCursor()
-    
-    -- Скрываем стандартный курсор
-    local success, result = pcall(function()
-        game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
-    end)
-    
-    DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if getgenv().DotCursor and DotCursorGui and DotCursorGui:FindFirstChild("Dot") then
-            UpdateDotCursor()
-            -- Дополнительно скрываем курсор каждый кадр
-            pcall(function()
-                game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
-            end)
-        else
-            if DotCursorConnection then
-                DotCursorConnection:Disconnect()
-                DotCursorConnection = nil
-            end
-            if DotCursorGui then
-                DotCursorGui:Destroy()
-                DotCursorGui = nil
-            end
-            -- Восстанавливаем стандартный курсор
-            pcall(function()
-                game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
-            end)
-        end
+    -- Просто прячем курсор Roblox
+    pcall(function()
+        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+        mouse.Icon = "rbxasset://textures/blank.png"
     end)
 end
 
 local function StopDotCursor()
-    if DotCursorConnection then
-        DotCursorConnection:Disconnect()
-        DotCursorConnection = nil
-    end
-    if DotCursorGui then
-        DotCursorGui:Destroy()
-        DotCursorGui = nil
-    end
-    -- Восстанавливаем стандартный курсор
+    -- Возвращаем стандартный курсор Roblox
     pcall(function()
-        game:GetService("Players").LocalPlayer:GetMouse().Icon = ""
+        local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+        mouse.Icon = ""
     end)
 end
 
