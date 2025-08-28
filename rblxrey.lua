@@ -20,7 +20,6 @@ local function round(n) return math.floor(tonumber(n) + 0.5) end
 local Number = math.random(1, 999999)
 
 --========== Dot Cursor ==========--
-local DotGui = nil
 
 local function CreateSimpleDot()
     if DotGui then
