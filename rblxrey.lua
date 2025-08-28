@@ -69,7 +69,7 @@ local function StartDotCursor()
     DotCursorConnection = game:GetService("RunService").RenderStepped:Connect(function()
         if getgenv().DotCursor then
             UpdateDotCursor()
-            game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxasset://textures/blank.png"
+            game:GetService("Players").LocalPlayer:GetMouse().Icon = "rbxassetid://187012669"
         else
             if DotCursorConnection then
                 DotCursorConnection:Disconnect()
